@@ -1,0 +1,244 @@
+  /* ------------------------------------------------------------------ \
+   | NAME:     STATSCDC.MAC                                             |
+   | PRODUCT:  SAS                                                      |
+   | LANGUAGE: SAS                                                      |
+   | PURPOSE:  TO PRODUCE FREQS FOR DISCRETE CHARACTER VARIBLES
+   | FUTURE
+   | PURPOSE:  TO PRODUCE  MOST COMMON STATISTICS FOR DISTINGUISHING    |
+   |           BETWEEN TWO DISTRIBUTIONS.                               |
+   |           THE OUTPUT OF THE PROGRAM WILL CONTAIN KOLMOGOROV-SMIRNOV|
+   |           D STATISTICS, KULLBACK -LEIBLER INFORMATION,             |
+   |           INFORMATION VALUE, DIVERGENCE, AND THE DISTRIBUTION OF   |
+   |           THE DISCRETE VARIABLES.                                  |
+   | AUTHOR:   EDUARDO FONTES                                           |
+   | DATE:     05/10/2001, 11/05/2001 ,08/26/2002                       |
+   \------------------------------------------------------------------ */
+OPTION MPRINT NODATE ;
+%MACRO UNIANADC(EXPVAR,EXPDESC,INTVLS,EFMT) ;
+
+  **  FILENM: THE SAS INPUT DATA DATA SET
+      OUTFNM: THE SAS OUTPUT DATA DATA SET
+      DEPVAR: DEPENDENT VARIABLE ( 1= BAD , 0=GOOD )
+      EXPVAR: EXPLANATORY VARIABLE
+      EXPDISC: EXPLANATORY VARIABLE S DESCRIPTION
+      INTVLS: NUMBER OF INTERVALS
+      EFMT:  FORMAT FOR EXPLANATORY VARIABLE
+                 ;
+DATA TEMP1 (KEEP= &EXPVAR &DEPVAR WT);
+            SET &FILENM;
+            CAT=&DEPVAR ;
+            WT=&WEIGHT ;
+            IF &WEIGHT =.  THEN WT=1 ;
+
+ ****              CALCULATES FREQUENCIES  ******** ;
+
+PROC FREQ DATA=TEMP1  ;
+    TABLES &EXPVAR*&DEPVAR / NOPRINT MISSING SPARSE OUT=DATA2 ;
+     FORMAT &EXPVAR &EFMT. ;
+    WEIGHT WT;
+RUN;
+
+/*
+DATA DIV;
+     SET TEMP1;
+     CAT=&DEPVAR;
+PROC SORT  DATA=DIV ;
+     BY CAT;
+PROC MEANS DATA=DIV NOPRINT VARDEF=WEIGHT;
+      OUTPUT OUT=G MEAN=XBAR MNWT SUM=MX NWT VAR=VAR N=N ;
+      BY CAT;
+      VAR &EXPVAR  WT;
+      WEIGHT WT ;
+RUN;
+DATA DIV2 ;
+      SET G;
+      RETAIN SUMNWT 0  what 0 ;
+      SUMNWT=SUMNWT+NWT ;
+      IF _N_=1 THEN WHAT=CAT ;
+      CAT1=MIN(CAT,WHAT) ;
+      IF _N_  =2 THEN DO ;
+      CAT2=MAX(CAT,WHAT) ;
+         %LET CAT11=CAT1 ;
+         %LET CAT22=CAT2 ;
+      END;
+
+DATA DIV3 ;
+      SET DIV2 ;
+             IF CAT=&CAT11 ;
+             CATG=CAT ;
+             XBARG=round (XBAR, .01) ;
+             VARG=VAR ;
+             stdg=(varg)**.5 ;
+            stdg=round(stdg,.01);
+             NWTG=NWT ;
+RUN;
+
+DATA DIV4 ;
+         SET DIV2 ;
+             IF CAT=&CAT22 ;
+            CATB=CAT ;
+            XBARB=round(XBAR,.01) ;
+            VARB=VAR ;
+             stdb=(varb)**.5 ;
+            stdb=round(stdb,.01);
+            NWTB=NWT ;
+RUN;
+
+DATA FIN ;
+        MERGE DIV3  DIV4 ;
+
+        D=(((XBARG-XBARB)**2 )*SUMNWT) / ((NWTB*VARB) + (NWTG*VARG)) ;
+        D=ROUND(D,.01) ;
+        * KEEP D ;
+
+
+DATA DATA2 ;
+         IF _N_=1 THEN SET FIN ;
+                       SET  DATA2;
+                       %LET Dd=D ;
+RUN;
+*/
+ /*  CALCULATING DISTRIBUTION FOR BADS AND GOODS AND STATISTICS */
+/*
+DATA DATA3 ;
+
+    LENGTH NAME $ 41 ;
+
+    LENGTH  NM01- NM41  $ 41 ;
+    RETAIN  NM01- NM41  ' ' ;    ARRAY MNAME(41) $  NM01 - NM41 ;
+    RETAIN  NGD01- NGD41 0 ;     ARRAY MGOODS(41)   NGD01- NGD41 ;
+    RETAIN  NBD01- NBD41 0 ;     ARRAY MBADS(41)    NBD01- NBD41 ;
+    RETAIN  PGD01- PGD41 0 ;     ARRAY MPGOODS(41)  PGD01- PGD41 ;
+    RETAIN  PBD01- PBD41 0 ;     ARRAY MPBADS(41)   PBD01- PBD41 ;
+
+    RETAIN I 0
+           K 0 ;
+
+
+    SET DATA2 END=ENDFLAG ;
+
+        K = &INTVLS  + 1 ;
+
+  *******   GOODS  *********** ;
+
+    IF (&DEPVAR =&CAT11) THEN DO;
+        I = I + 1 ;
+        MNAME(I) = PUT(&EXPVAR,&EFMT.) ;
+        MGOODS(I) = COUNT ;
+        MGOODS(K) = MGOODS(K) + COUNT ;
+        END ;
+     **********   BADS ************** ;
+
+    ELSE IF (&DEPVAR =&CAT22) THEN DO ;
+        MBADS(I) = COUNT ;
+        MBADS(K) = MBADS(K) + COUNT ;
+        END ;
+
+    IF (ENDFLAG > 0) THEN DO ;
+
+        MNAME(K) = "   TOTAL " ;
+        MPGOODS(K) = 1.0 ;
+        MPBADS(K) = 1.0 ;
+
+        KSD      = 0.0 ;
+        KLD      = 0.0 ;
+        INFO_VAL = 0.0 ;
+        CUMGD    = 0.0 ;
+        CUMBD    = 0.0 ;
+
+
+        DO J=1 TO &INTVLS;
+            IF (MGOODS(J) > 0) THEN MPGOODS(J) = MGOODS(J) / MGOODS(K) ;
+            ELSE MPGOODS(J) = 0.0001 ;
+            IF (MBADS(J) > 0) THEN MPBADS(J) = MBADS(J) / MBADS(K) ;
+            ELSE MPBADS(J) = 0.0001 ;
+            CUMGD = CUMGD + MPGOODS(J) ;
+            CUMBD = CUMBD + MPBADS(J) ;
+            KSD = MAX( KSD, ABS(CUMBD - CUMGD)) ;
+            KLD = KLD  + MPBADS(J) *
+                      (LOG(MPBADS(J) / MPGOODS(J)))  ;
+            INFO_VAL = INFO_VAL + (MPBADS(J) - MPGOODS(J)) *
+                      (LOG(MPBADS(J) / MPGOODS(J)))  ;
+            END ;
+        KSD=ROUND(KSD,.01) ;
+        KLD=ROUND(KLD,.01) ;
+        INFO_VAL=ROUND(INFO_VAL,.01) ;
+
+        FILE LOG ;
+        DO J=1 TO K ;
+            EXPDESC="&EXPDESC" ;
+         *  OUTFNM=&OUTFNM ;
+            EXPVAR="&EXPVAR" ;
+            NAME = MNAME(J) ;
+            GOODS = MGOODS(J) ;
+            BADS = MBADS(J) ;
+            PGOODS = MPGOODS(J) ;
+            PBADS = MPBADS(J) ;
+            BADRATE =  (100*BADS)/(GOODS+BADS) ;
+            IF (J = K) THEN BADRATE = .  ;
+            OUTPUT ;
+            END ;
+         END ;
+ TITLE ' ';
+ TITLE2 ' ';
+ DATA _NULL_ ;
+   FILE PRINT;
+     SET DATA3 ;
+        BADRATE=ROUND(BADRATE,.01) ;
+        IF GOODS=0 AND BADS=0 THEN DELETE;
+      IF _N_=1     THEN   DO;
+        PUT @ 15 "ANALYTICAL SERVICES" / ;
+        PUT @ 15 "&PROJECT" ;
+        PUT  //  @10 "COMPARISON OF BADS AND GOODS DISTRIBUTIONS FOR" ;
+        PUT @20 "  " ;
+        PUT @15 "VARIABLE: &EXPVAR - &EXPDESC " ;
+        PUT @20 "  " ;
+        PUT @20 "KOLMOGOROV-SMIRNOV D-STATISTIC       =" KSD ;
+        PUT @20 "KULLBACK-LEIBLER INFORMATION         =" KLD ;
+        PUT @20 "INFORMATION VALUE                    =" INFO_VAL ;
+        PUT @20 "DIVERGENCE                           =" &Dd ;
+        PUT @20 'MEAN OF GOODS                        =' XBARG   ;
+        PUT @20 "STANDARD DEVIATION OF GOODS          =" stdg  ;
+        PUT @20 'MEAN OF BADS                         =' XBARB ;
+        PUT @20 "STANDARD DEVIATION OF BADS           =" STDB ;
+        PUT @20 "  " ;
+        PUT @20 "  " ;
+        PUT @20 "  " ;
+        PUT
+        @ 29    "NO. OF "
+        @ 41    "NO. OF "
+        @ 50    "PROB. OF"
+        @ 60    "PROB. OF"
+        @ 71    "BAD"   /
+        @ 7     " INTERVAL"
+        @ 29    "BADS"
+        @ 41    "GOODS"
+        @ 50    "BADS"
+        @ 60    "GOODS"
+        @ 71    "RATE"   ;
+        R1= REPEAT('_',73) ;
+        PUT @1 R1 ;
+     END;
+     PUT
+       @ 2  NAME $  22.
+       @ 26 BADS  9.1
+       @ 38 GOODS 9.1
+       @ 50 PBADS 7.5
+       @ 59 PGOODS 7.5
+       @ 67 BADRATE 8.4;
+       R1= REPEAT('_',73) ;
+   IF _N_ = K-1 THEN PUT @1 R1 ;
+RUN ;
+
+DATA LAST ;
+   SET DATA3 ;
+      KEEP EXPDESC INFO_VAL KLD KSD D EXPVAR ;
+      IF _N_ =1 THEN OUTPUT ;
+
+PROC APPEND BASE=&OUTFNM DATA=LAST  FORCE ;
+*/
+RUN;
+QUIT;
+
+%MEND UNIANADC;
+

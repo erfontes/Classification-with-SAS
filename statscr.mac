@@ -1,0 +1,750 @@
+
+
+
+OPTION MISSING='-'  NODATE NONUMBER NONOTES PS=60  ;
+
+%MACRO STATSCR(FILENM,DEPVAR,EXPVAR,EXPDISC,WEIGHT,PROJECT) ;
+
+  **  FILENM: THE SAS INPUT DATA DATA SET
+      OUTFNM: THE SAS OUTPUT DATA DATA SET
+      DEPVAR: DEPENDENT VARIABLE ( 1= BAD , 0=GOOD )
+      EXPVAR: EXPLANATORY VARIABLE
+      EXPDISC: EXPLANATORY VARIABLE S DISCRIPTION
+      PROJECT: THE PROJECT S NAME
+                 ;
+  **  NOTE: OBSERVATIONS WITH MISSING VALUES ARE NOT COUNTED IN
+      THE PROC UNIVARIATE PERCENTILES  ;
+
+DATA TEMP1 (KEEP= &EXPVAR &DEPVAR WT);
+            SET &FILENM;
+            CAT=&DEPVAR;
+            WT=&WEIGHT ;
+            IF &WEIGHT =.  THEN WT=1 ;
+
+PROC UNIVARIATE DATA=TEMP1 NOPRINT ;
+    VAR &EXPVAR ;
+    OUTPUT OUT=DATA1
+           PCTLPTS =  0  5 10 15 20 25 30 35
+                     40 45 50 55 60 65 70 75
+                     80 85 90 95
+           PCTLPRE  =  PCT ;
+           WEIGHT WT  ;
+RUN ;
+
+
+
+DATA _NULL_ ;
+
+
+
+    RETAIN LPCT01-LPCT21 0 ;
+    RETAIN UPCT01-UPCT20 0 ;
+    ARRAY NPCTL(21) LPCT01-LPCT21 ;
+    ARRAY NPCTU(20) UPCT01-UPCT20 ;
+
+    SET DATA1 ;
+
+    NROWS =21;
+
+    NPCTL(1)  = PCT0 ;
+    NPCTL(2)  = PCT5  ;
+    NPCTL(3)  = PCT10 ;
+    NPCTL(4)  = PCT15 ;
+    NPCTL(5)  = PCT20 ;
+    NPCTL(6)  = PCT25 ;
+    NPCTL(7)  = PCT30 ;
+    NPCTL(8)  = PCT35 ;
+    NPCTL(9)  = PCT40 ;
+    NPCTL(10) = PCT45 ;
+    NPCTL(11) = PCT50 ;
+    NPCTL(12) = PCT55 ;
+    NPCTL(13) = PCT60 ;
+    NPCTL(14) = PCT65 ;
+    NPCTL(15) = PCT70 ;
+    NPCTL(16) = PCT75 ;
+    NPCTL(17) = PCT80 ;
+    NPCTL(18) = PCT85 ;
+    NPCTL(19) = PCT90 ;
+    NPCTL(20) = PCT95 ;
+    NPCTL(21)  =  .    ;
+
+    DO I=1 TO 19 ;
+        DO WHILE ( (NPCTL(I) = NPCTL(I+1)) AND (NPCTL(I) NE .) ) ;
+            NROWS = NROWS - 1 ;
+            DO J = I+1 TO 20 ;
+                NPCTL(J) = NPCTL(J+1) ;
+                END ;
+            END ;
+        END ;
+
+    DO I=1 TO 20 ;
+        NPCTU(I) = NPCTL(I+1);
+        END ;
+
+    CALL SYMPUT('ROWS',NROWS) ;
+    CALL SYMPUT('PL1', NPCTL(1)) ;
+    CALL SYMPUT('PU1', NPCTU(1));
+    CALL SYMPUT('PL2', NPCTL(2));
+    CALL SYMPUT('PU2', NPCTU(2));
+    CALL SYMPUT('PL3', NPCTL(3));
+    CALL SYMPUT('PU3', NPCTU(3));
+    CALL SYMPUT('PL4', NPCTL(4));
+    CALL SYMPUT('PU4', NPCTU(4));
+    CALL SYMPUT('PL5', NPCTL(5));
+    CALL SYMPUT('PU5', NPCTU(5));
+    CALL SYMPUT('PL6', NPCTL(6));
+    CALL SYMPUT('PU6', NPCTU(6));
+    CALL SYMPUT('PL7', NPCTL(7));
+    CALL SYMPUT('PU7', NPCTU(7));
+    CALL SYMPUT('PL8', NPCTL(8));
+    CALL SYMPUT('PU8', NPCTU(8));
+    CALL SYMPUT('PL9', NPCTL(9));
+    CALL SYMPUT('PU9', NPCTU(9));
+    CALL SYMPUT('PL10', NPCTL(10));
+    CALL SYMPUT('PU10', NPCTU(10));
+    CALL SYMPUT('PL11', NPCTL(11));
+    CALL SYMPUT('PU11', NPCTU(11));
+    CALL SYMPUT('PL12', NPCTL(12));
+    CALL SYMPUT('PU12', NPCTU(12));
+    CALL SYMPUT('PL13', NPCTL(13));
+    CALL SYMPUT('PU13', NPCTU(13));
+    CALL SYMPUT('PL14', NPCTL(14));
+    CALL SYMPUT('PU14', NPCTU(14));
+    CALL SYMPUT('PL15', NPCTL(15));
+    CALL SYMPUT('PU15', NPCTU(15));
+    CALL SYMPUT('PL16', NPCTL(16));
+    CALL SYMPUT('PU16', NPCTU(16));
+    CALL SYMPUT('PL17', NPCTL(17));
+    CALL SYMPUT('PU17', NPCTU(17));
+    CALL SYMPUT('PL18', NPCTL(18));
+    CALL SYMPUT('PU18', NPCTU(18));
+    CALL SYMPUT('PL19', NPCTL(19));
+    CALL SYMPUT('PU19', NPCTU(19));
+    CALL SYMPUT('PL20', NPCTL(20));
+
+  RUN;
+DATA _NULL_ ;
+
+ LENGTH PLL1  $ 7 PLL2  $ 7 PLL3  $ 7 PLL4  $ 7 PLL5  $ 7 PLL6  $ 7
+        PLL7  $ 7 PLL8  $ 7 PLL9  $ 7 PLL10 $ 7 PLL11 $ 7 PLL12 $ 7
+        PLL13 $ 7 PLL14 $ 7 PLL15 $ 7 PLL16 $ 7 PLL17 $ 7 PLL18 $ 7
+        PLL19 $ 7 PLL20 $ 7
+        PUU1  $ 7 PUU2  $ 7 PUU3  $ 7 PUU4  $ 7 PUU5  $ 7 PUU6  $ 7
+        PUU7  $ 7 PUU8  $ 7 PUU9  $ 7 PUU10 $ 7 PUU11 $ 7 PUU12 $ 7
+        PUU13 $ 7 PUU14 $ 7 PUU15 $ 7 PUU16 $ 7 PUU17 $ 7 PUU18 $ 7
+        PUU19 $ 7 ;
+RUN;
+     %LET PLL1=&PL1 ;
+     %LET PUU1=&PU1 ;
+     %LET PLL2=&PL2 ;
+     %LET PUU2=&PU2 ;
+     %LET PLL3=&PL3 ;
+     %LET PUU3=&PU3 ;
+     %LET PLL4=&PL4 ;
+     %LET PUU4=&PU4 ;
+     %LET PLL5=&PL5 ;
+     %LET PUU5=&PU5 ;
+     %LET PLL6=&PL6 ;
+     %LET PUU6=&PU6 ;
+     %LET PLL7=&PL7 ;
+     %LET PUU7=&PU7 ;
+     %LET PLL8=&PL8 ;
+     %LET PUU8=&PU8 ;
+     %LET PLL9=&PL9 ;
+     %LET PUU9=&PU9 ;
+     %LET PLL10=&PL10;
+     %LET PUU10=&PU10;
+     %LET PLL11=&PL11;
+     %LET PUU11=&PU11;
+     %LET PLL12=&PL12;
+     %LET PUU12=&PU12;
+     %LET PLL13=&PL13;
+     %LET PUU13=&PU13;
+     %LET PLL14=&PL14;
+     %LET PUU14=&PU14;
+     %LET PLL15=&PL15;
+     %LET PUU15=&PU15;
+     %LET PLL16=&PL16;
+     %LET PUU16=&PU16;
+     %LET PLL17=&PL17;
+     %LET PUU17=&PU17;
+     %LET PLL18=&PL18;
+     %LET PUU18=&PU18;
+     %LET PLL19=&PL19;
+     %LET PUU19=&PU19;
+     %LET PLL20=&PL20;
+
+RUN;
+
+
+
+%IF (&ROWS = 21) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -< &PL7  = "&PLL6 -<&PUU6"
+            &PL7  -< &PL8  = "&PLL7 -<&PUU7"
+            &PL8  -< &PL9  = "&PLL8 -<&PUU8"
+            &PL9  -< &PL10 = "&PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -< &PL16 = "&PLL15 -<&PUU15"
+            &PL16 -< &PL17 = "&PLL16 -<&PUU16"
+            &PL17 -< &PL18 = "&PLL17 -<&PUU17"
+            &PL18 -< &PL19 = "&PLL18 -<&PUU18"
+            &PL19 -< &PL20 = "&PLL19 -<&PUU19"
+            &PL20 -  HIGH  = "&PLL20+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 20) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -< &PL7  = "&PLL6 -<&PUU6"
+            &PL7  -< &PL8  = "&PLL7 -<&PUU7"
+            &PL8  -< &PL9  = "&PLL8 -<&PUU8"
+            &PL9  -< &PL10 = "&PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -< &PL16 = "&PLL15 -<&PUU15"
+            &PL16 -< &PL17 = "&PLL16 -<&PUU16"
+            &PL17 -< &PL18 = "&PLL17 -<&PUU17"
+            &PL18 -< &PL19 = "&PLL18 -<&PUU18"
+            &PL19 -  HIGH  = "&PLL19+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 19) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -< &PL16 = "&PLL15 -<&PUU15"
+            &PL16 -< &PL17 = "&PLL16 -<&PUU16"
+            &PL17 -< &PL18 = "&PLL17 -<&PUU17"
+            &PL18 -  HIGH  = "&PLL18+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 18) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -< &PL16 = "&PLL15 -<&PUU15"
+            &PL16 -< &PL17 = "&PLL16 -<&PUU16"
+            &PL17 -  HIGH  = "&PLL17+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 17) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -< &PL16 = "&PLL15 -<&PUU15"
+            &PL16 -  HIGH  = "&PLL16+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 16) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -< &PL15 = "&PLL14 -<&PUU14"
+            &PL15 -  HIGH  = "&PLL15+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+
+%ELSE %IF (&ROWS = 15) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -< &PL14 = "&PLL13 -<&PUU13"
+            &PL14 -  HIGH  = "&PLL14+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 14) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -< &PL12 = "&PLL11 -<&PUU11"
+            &PL12 -< &PL13 = "&PLL12 -<&PUU12"
+            &PL13 -  HIGH  = "&PLL13+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+
+%ELSE %IF (&ROWS = 13) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1-<&PUU1"
+            &PL2  -< &PL3  = "&PLL2-<&PUU2"
+            &PL3  -< &PL4  = "&PLL3-<&PUU3"
+            &PL4  -< &PL5  = "&PLL4-<&PUU4"
+            &PL5  -< &PL6  = "&PLL5-<&PUU5"
+            &PL6  -< &PL7  = "&PLL6-<&PUU6"
+            &PL7  -< &PL8  = "&PLL7-<&PUU7"
+            &PL8  -< &PL9  = "&PLL8-<&PUU8"
+            &PL9  -< &PL10 = "&PLL9-<&PUU9"
+            &PL10 -< &PL11 = "&PLL10-<&PUU10"
+            &PL11 -< &PL12 = "&PLL11-<&PUU11"
+            &PL12 -  HIGH  = "&PLL12+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+%END;
+%ELSE %IF (&ROWS = 12) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -< &PL11 = "&PLL10 -<&PUU10"
+            &PL11 -  HIGH  = "&PLL11+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 11) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = " &PLL1 -<&PUU1"
+            &PL2  -< &PL3  = " &PLL2 -<&PUU2"
+            &PL3  -< &PL4  = " &PLL3 -<&PUU3"
+            &PL4  -< &PL5  = " &PLL4 -<&PUU4"
+            &PL5  -< &PL6  = " &PLL5 -<&PUU5"
+            &PL6  -< &PL7  = " &PLL6 -<&PUU6"
+            &PL7  -< &PL8  = " &PLL7 -<&PUU7"
+            &PL8  -< &PL9  = " &PLL8 -<&PUU8"
+            &PL9  -< &PL10 = " &PLL9 -<&PUU9"
+            &PL10 -  HIGH  = "&PLL10+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 10) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -< &PL7  = "&PLL6 -<&PUU6"
+            &PL7  -< &PL8  = "&PLL7 -<&PUU7"
+            &PL8  -< &PL9  = "&PLL8 -<&PUU8"
+            &PL9  -  HIGH  = "&PLL9+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 9) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -< &PL7  = "&PLL6 -<&PUU6"
+            &PL7  -< &PL8  = "&PLL7 -<&PUU7"
+            &PL8  -  HIGH  = "&PLL8+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 8) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -< &PL7  = "&PLL6 -<&PUU6"
+            &PL7  -  HIGH  = "&PLL7+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 7) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -< &PL6  = "&PLL5 -<&PUU5"
+            &PL6  -  HIGH  = "&PLL6+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 6) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -< &PL5  = "&PLL4 -<&PUU4"
+            &PL5  -  HIGH  = "&PLL5+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+%ELSE %IF (&ROWS = 5) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -< &PL4  = "&PLL3 -<&PUU3"
+            &PL4  -  HIGH  = "&PLL4+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 4) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -< &PL3  = "&PLL2 -<&PUU2"
+            &PL3  -  HIGH  = "&PLL3+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+
+%ELSE %IF (&ROWS = 3) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -< &PL2  = "&PLL1 -<&PUU1"
+            &PL2  -  HIGH  = "&PLL2+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+%ELSE %IF (&ROWS = 2) %THEN %DO ;
+    PROC FORMAT ;
+        VALUE EFMT
+            LOW   -  HIGH  = "&PLL1+ "
+            OTHER          = 'MISSING '
+          ;
+    RUN ;
+    %END ;
+
+ ****              CALCULATES FREQUENCIES  ******** ;
+
+PROC FREQ DATA=TEMP1  ;
+    TABLES &EXPVAR*&DEPVAR / NOPRINT MISSING SPARSE OUT=DATA2 ;
+     FORMAT &EXPVAR EFMT. ;
+    WEIGHT WT;
+RUN;
+
+
+DATA DIV;
+     SET TEMP1;
+     CAT=&DEPVAR;
+PROC SORT  DATA=DIV ;
+     BY CAT;
+PROC MEANS DATA=DIV NOPRINT VARDEF=WEIGHT ;
+      OUTPUT OUT=G MEAN=XBAR MNWT SUM=MX NWT VAR=VAR N=N ;
+      BY CAT;
+      VAR &EXPVAR  WT;
+      WEIGHT WT ;
+RUN;
+
+DATA DIV2 ;
+      SET G;
+      RETAIN SUMNWT 0  what 0 ;
+      SUMNWT=SUMNWT+NWT ;
+      IF _N_=1 THEN WHAT=CAT ;
+      CAT1=MIN(CAT,WHAT) ;
+      IF _N_  =2 THEN DO ;
+      CAT2=MAX(CAT,WHAT) ;
+         %LET CAT11=CAT1 ;
+         %LET CAT22=CAT2 ;
+      END;
+
+DATA DIV3 ;
+      SET DIV2 ;
+             IF CAT=&CAT11 ;
+             CATG=CAT ;
+             XBARG=round (XBAR, .01) ;
+             VARG=VAR ;
+             stdg=(varg)**.5 ;
+             stdg=round(stdg,.01);
+             NWTG=NWT ;
+RUN;
+
+DATA DIV4 ;
+         SET DIV2 ;
+            IF CAT=&CAT22 ;
+            CATB=CAT ;
+            XBARB=round(XBAR,.01) ;
+            VARB=VAR ;
+             stdb=(varb)**.5 ;
+            stdb=round(stdb,.01);
+            NWTB=NWT ;
+RUN;
+
+DATA FIN ;
+        MERGE DIV3  DIV4 ;
+
+        D=(((XBARG-XBARB)**2 )*SUMNWT) / ((NWTB*VARB) + (NWTG*VARG)) ;
+        D=ROUND(D,.01) ;
+        * KEEP D ;
+
+
+DATA DATA2 ;
+         IF _N_=1 THEN SET FIN ;
+                       SET  DATA2;
+                       %LET Dd=D ;
+RUN;
+
+  *****  CALCULATING DISTRIBUTION FOR BADS AND GOODS AND STATISTICS ** ;
+
+DATA DATA3 ;
+
+    LENGTH NAME $ 41 ;
+
+    LENGTH  NM01- NM41  $ 41 ;
+    RETAIN  NM01- NM41  ' ' ;    ARRAY MNAME(41) $  NM01 - NM41 ;
+    RETAIN  NGD01- NGD41 0 ;     ARRAY MGOODS(41)   NGD01- NGD41 ;
+    RETAIN  NBD01- NBD41 0 ;     ARRAY MBADS(41)    NBD01- NBD41 ;
+    RETAIN  PGD01- PGD41 0 ;     ARRAY MPGOODS(41)  PGD01- PGD41 ;
+    RETAIN  PBD01- PBD41 0 ;     ARRAY MPBADS(41)   PBD01- PBD41 ;
+
+    RETAIN I 0  K 0 ;
+
+
+    SET DATA2 END=ENDFLAG ;
+
+    IF (_N_ = 1) THEN DO ;
+         NAMEF = PUT(&EXPVAR,EFMT.) ;
+         MISCHK = INDEX( NAMEF,'MISSING') ;
+         IF ( MISCHK = 0 ) THEN K = &ROWS ;
+
+         ELSE K = &ROWS + 1 ;
+        END ;
+
+        K = &ROWS + 1 ;
+
+  *******   GOODS  *********** ;
+
+    IF (&DEPVAR =&CAT11) THEN DO;
+        I = I + 1 ;
+        MNAME(I) = PUT(&EXPVAR,EFMT.) ;
+        MGOODS(I) = COUNT ;
+        MGOODS(K) = MGOODS(K) + COUNT ;
+        END ;
+     **********   BADS ************** ;
+
+    ELSE IF (&DEPVAR =&CAT22) THEN DO ;
+        MBADS(I) = COUNT ;
+        MBADS(K) = MBADS(K) + COUNT ;
+        END ;
+
+    IF (ENDFLAG > 0) THEN DO ;
+
+        MNAME(K) = "   TOTAL " ;
+        MPGOODS(K) = 1.0 ;
+        MPBADS(K) = 1.0 ;
+
+        KSD      = 0.0 ;
+        KLD      = 0.0 ;
+        INFO_VAL = 0.0 ;
+        CUMGD    = 0.0 ;
+        CUMBD    = 0.0 ;
+
+        L = K - 1 ;
+
+        DO J=1 TO L ;
+            IF (MGOODS(J) > 0) THEN MPGOODS(J) = MGOODS(J) / MGOODS(K) ;
+            ELSE MPGOODS(J) = 0.0001 ;
+            IF (MBADS(J) > 0) THEN MPBADS(J) = MBADS(J) / MBADS(K) ;
+            ELSE MPBADS(J) = 0.0001 ;
+            CUMGD = CUMGD + MPGOODS(J) ;
+            CUMBD = CUMBD + MPBADS(J) ;
+            KSD = MAX( KSD, ABS(CUMBD - CUMGD)) ;
+            KLD = KLD  + MPBADS(J) *
+                      (LOG(MPBADS(J) / MPGOODS(J)))  ;
+            INFO_VAL = INFO_VAL + (MPBADS(J) - MPGOODS(J)) *
+                      (LOG(MPBADS(J) / MPGOODS(J)))  ;
+            END ;
+        KSD=ROUND(KSD,.01) ;
+        KLD=ROUND(KLD,.01) ;
+        INFO_VAL=ROUND(INFO_VAL,.01) ;
+
+
+
+        TITLE "PROJECT:   &PROJECT" ;
+        FILE PRINT ;
+        PUT  //  @10 "COMPARISON OF BADS AND GOODS DISTRIBUTIONS" ;
+        PUT @20 "  " ;
+        PUT @15 "VARIABLE: &EXPVAR - &EXPDISC " ;
+        PUT @20 "  " ;
+        PUT @20 "KOLMOGOROV-SMIRNOV D-STATISTIC       =" KSD ;
+        PUT @20 "KULLBACK-LEIBLER INFORMATION         =" KLD ;
+        PUT @20 "INFORMATION VALUE                    =" INFO_VAL ;
+        PUT @20 "DIVERGENCE                           =" &Dd ;
+        PUT @20 'MEAN SCORE OF GOODS                  =' XBARG   ;
+        PUT @20 "STANDARD DEVIATION OF GOODS' SCORES  =" stdg  ;
+        PUT @20 'MEAN SCORE OF BADS                   =' XBARB ;
+        PUT @20 "STANDARD DEVIATION OF BADS' SCORES   =" STDB ;
+        FILE LOG ;
+        DO J=1 TO K ;
+            EXPDISC="&EXPDISC" ;
+            EXPVAR="&EXPVAR" ;
+            NAME = MNAME(J) ;
+            GOODS = MGOODS(J) ;
+            BADS = MBADS(J) ;
+            PGOODS = MPGOODS(J) ;
+            PBADS = MPBADS(J) ;
+            BADRATE =  (100*BADS)/(GOODS+BADS) ;
+            IF (J = K) THEN BADRATE ='-' ;
+            OUTPUT ;
+            END ;
+         END ;
+ DATA _NULL_ ;
+   FILE PRINT;
+     SET DATA3 ;
+     IF GOODS=0 AND BADS=0 THEN DELETE;
+      IF _N_=1     THEN   DO;
+      PUT
+      @ 29    "NO. OF "
+      @ 41    "NO. OF "
+      @ 50    "PROB. OF"
+      @ 60    "PROB. OF"
+      @ 71    "BAD"   /
+      @ 7     " INTERVAL"
+      @ 29    "BADS"
+      @ 41    "GOODS"
+      @ 50    "BADS"
+      @ 60    "GOODS"
+      @ 71    "RATE"   ;
+PUT  @ 1  "________________________________________________________________________"
+;
+     END;
+     PUT
+       @ 2  NAME $  22.
+       @ 26 BADS  9.1
+       @ 38 GOODS 9.1
+       @ 50 PBADS 7.5
+       @ 59 PGOODS 7.5
+       @ 67 BADRATE 8.4;
+RUN;
+RUN;
+
+%MEND STATSCR;
+
