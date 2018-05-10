@@ -48,12 +48,12 @@
     OPTION MPRINT;
 
 
-   filename  OUT    '/idn/gnsmis2/users/efonte/mbna/model';  * Directory name for output;
+   filename  OUT    '/erfontes/model';  * Directory name for output;
 
 
-    %LET PROJECT = MBNA FRAUD MODEL  ; * Name of the project  ;
+    %LET PROJECT = MODEL ; * Name of the project  ;
     %LET FILENM  = TEMP      ;    * Name of the final data set;
-    %LET DEPVAR  = WFISIND;                    * Name of dependent variable;
+    %LET DEPVAR  = TARGET;                    * Name of dependent variable;
     %LET OUTFNM  = OUT ;                   * Name of the output file ;
     %LET WEIGHT  = WGT   ;                   * Name of the weight variable;
 
@@ -63,8 +63,8 @@
 
 
 
-    TITLE     "MBNA - FRAUD MODEL" ;
-    filename  macpath  '/idn/macro/';
+    TITLE     "MODEL A" ;
+    filename  macpath  '/macro/';
 
 
 
@@ -77,7 +77,6 @@ RUN;
 
 %unianac(age, age);
 %unianac(tenure, tenure);
-%unianac(avg_spend_3, spend3M);
 
 
 
